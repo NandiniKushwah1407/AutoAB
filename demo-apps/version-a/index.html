@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CloudSync — Sync Your World (Version A)</title>
+  <style>
+    /* ───────────────────────────────────────────
+       RESET & BASE
+    ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:    #2563eb;   /* blue — control colour */
+      --primary-h:  #1d4ed8;
+      --accent:     #0ea5e9;
+      --bg:         #f8fafc;
+      --card-bg:    #ffffff;
+      --text-dark:  #0f172a;
+      --text-mid:   #475569;
+      --text-light: #94a3b8;
+      --border:     #e2e8f0;
+      --radius:     12px;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text-dark);
+      line-height: 1.6;
+    }
+
+    /* ───────────────────────────────────────────
+       NAV
+    ─────────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 5%;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .logo { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a { text-decoration: none; color: var(--text-mid); font-size: .9rem; }
+    .nav-links a:hover { color: var(--primary); }
+    .nav-cta {
+      background: var(--primary); color: #fff;
+      border: none; border-radius: 8px;
+      padding: .5rem 1.2rem; font-size: .9rem; font-weight: 600;
+      cursor: pointer; transition: background .2s;
+    }
+    .nav-cta:hover { background: var(--primary-h); }
+
+    /* ───────────────────────────────────────────
+       HERO
+    ─────────────────────────────────────────── */
+    .hero {
+      max-width: 900px; margin: 0 auto;
+      padding: 120px 5% 80px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: #eff6ff; color: var(--primary);
+      border: 1px solid #bfdbfe;
+      border-radius: 100px; padding: .3rem 1rem;
+      font-size: .8rem; font-weight: 600; letter-spacing: .05em;
+      text-transform: uppercase; margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 800; line-height: 1.15;
+      color: var(--text-dark);
+      margin-bottom: 1.2rem;
+    }
+    .hero h1 span { color: var(--primary); }
+    .hero p {
+      font-size: 1.15rem; color: var(--text-mid);
+      max-width: 580px; margin: 0 auto 2.5rem;
+    }
+    .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--primary); color: #fff;
+      border: none; border-radius: var(--radius);
+      padding: .9rem 2.2rem; font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: background .2s, transform .1s;
+      text-decoration: none; display: inline-block;
+    }
+    .btn-primary:hover { background: var(--primary-h); transform: translateY(-1px); }
+    .btn-secondary {
+      background: transparent; color: var(--primary);
+      border: 2px solid var(--primary); border-radius: var(--radius);
+      padding: .9rem 2.2rem; font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: background .2s;
+      text-decoration: none; display: inline-block;
+    }
+    .btn-secondary:hover { background: #eff6ff; }
+
+    /* ───────────────────────────────────────────
+       STATS BAR
+    ─────────────────────────────────────────── */
+    .stats-bar {
+      background: var(--primary);
+      padding: 1.8rem 5%;
+      display: flex; justify-content: center;
+      flex-wrap: wrap; gap: 3rem;
+    }
+    .stat-item { text-align: center; color: #fff; }
+    .stat-item .num { font-size: 2rem; font-weight: 800; }
+    .stat-item .lbl { font-size: .85rem; opacity: .85; }
+
+    /* ───────────────────────────────────────────
+       FEATURES
+    ─────────────────────────────────────────── */
+    .features {
+      max-width: 1100px; margin: 80px auto;
+      padding: 0 5%;
+    }
+    .section-title {
+      text-align: center; font-size: 2rem; font-weight: 700;
+      margin-bottom: .5rem;
+    }
+    .section-sub {
+      text-align: center; color: var(--text-mid);
+      margin-bottom: 3rem; font-size: 1rem;
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+    .feature-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 2rem;
+      transition: box-shadow .2s;
+    }
+    .feature-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,.08); }
+    .feature-icon { font-size: 2.2rem; margin-bottom: 1rem; }
+    .feature-card h3 { font-size: 1.1rem; margin-bottom: .5rem; }
+    .feature-card p { color: var(--text-mid); font-size: .9rem; }
+
+    /* ───────────────────────────────────────────
+       PRICING
+    ─────────────────────────────────────────── */
+    .pricing {
+      background: var(--card-bg);
+      padding: 80px 5%;
+    }
+    .pricing-grid {
+      max-width: 900px; margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem; margin-top: 2rem;
+    }
+    .plan {
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 2rem; text-align: center;
+    }
+    .plan.popular { border-color: var(--primary); }
+    .plan-badge {
+      background: var(--primary); color: #fff;
+      border-radius: 100px; padding: .2rem .8rem;
+      font-size: .75rem; font-weight: 600;
+    }
+    .plan h3 { font-size: 1.2rem; margin: .8rem 0 .3rem; }
+    .plan .price { font-size: 2.5rem; font-weight: 800; color: var(--primary); }
+    .plan .price span { font-size: 1rem; font-weight: 400; color: var(--text-mid); }
+    .plan ul { list-style: none; margin: 1.2rem 0; text-align: left; }
+    .plan ul li { padding: .35rem 0; color: var(--text-mid); font-size: .9rem; }
+    .plan ul li::before { content: "✓ "; color: var(--primary); font-weight: 700; }
+    .plan-btn {
+      width: 100%; background: var(--primary); color: #fff;
+      border: none; border-radius: 8px;
+      padding: .75rem; font-size: .95rem; font-weight: 600;
+      cursor: pointer; transition: background .2s;
+    }
+    .plan-btn:hover { background: var(--primary-h); }
+
+    /* ───────────────────────────────────────────
+       FORM / CTA SECTION
+    ─────────────────────────────────────────── */
+    .cta-section {
+      max-width: 620px; margin: 80px auto;
+      padding: 0 5%; text-align: center;
+    }
+    .cta-section h2 { font-size: 2rem; font-weight: 700; margin-bottom: .5rem; }
+    .cta-section p { color: var(--text-mid); margin-bottom: 1.5rem; }
+    .signup-form {
+      display: flex; gap: .8rem; flex-wrap: wrap; justify-content: center;
+    }
+    .signup-form input {
+      flex: 1; min-width: 220px;
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: .8rem 1rem; font-size: .95rem; outline: none;
+    }
+    .signup-form input:focus { border-color: var(--primary); }
+    .signup-form button {
+      background: var(--primary); color: #fff;
+      border: none; border-radius: 8px;
+      padding: .8rem 1.5rem; font-size: .95rem; font-weight: 600;
+      cursor: pointer; white-space: nowrap;
+    }
+    .signup-form button:hover { background: var(--primary-h); }
+
+    /* ───────────────────────────────────────────
+       FOOTER
+    ─────────────────────────────────────────── */
+    footer {
+      background: var(--text-dark); color: var(--text-light);
+      text-align: center; padding: 2.5rem 5%;
+      font-size: .85rem;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    /* ───────────────────────────────────────────
+       AUTOAB DEBUG BADGE (dev only)
+    ─────────────────────────────────────────── */
+    .ab-badge {
+      position: fixed; bottom: 16px; right: 16px;
+      background: #1e293b; color: #94a3b8;
+      border-radius: 8px; padding: .5rem .9rem;
+      font-size: .75rem; font-family: monospace;
+      z-index: 9999; pointer-events: none;
+    }
+    .ab-badge strong { color: #38bdf8; }
+  </style>
+</head>
+<body>
+
+  <!-- ───── NAV ───── -->
+  <nav>
+    <span class="logo">☁ CloudSync</span>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#signup">Get Started</a></li>
+    </ul>
+    <button class="nav-cta" id="nav-signup-btn">Sign Up Free</button>
+  </nav>
+
+  <!-- ───── HERO ───── -->
+  <section class="hero">
+    <div class="hero-badge">☁ Cloud Storage &amp; Collaboration</div>
+    <h1>Store, Sync &amp; Share<br /><span>Your Files Everywhere</span></h1>
+    <p>CloudSync keeps all your files backed up, organised, and accessible from any device. Simple, secure, and fast.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" id="hero-cta-btn">Get Started for Free</button>
+      <a href="#features" class="btn-secondary">See Features</a>
+    </div>
+  </section>
+
+  <!-- ───── STATS BAR ───── -->
+  <div class="stats-bar">
+    <div class="stat-item"><div class="num">500K+</div><div class="lbl">Users</div></div>
+    <div class="stat-item"><div class="num">99.9%</div><div class="lbl">Uptime</div></div>
+    <div class="stat-item"><div class="num">2PB</div><div class="lbl">Data Stored</div></div>
+    <div class="stat-item"><div class="num">180+</div><div class="lbl">Countries</div></div>
+  </div>
+
+  <!-- ───── FEATURES ───── -->
+  <section class="features" id="features">
+    <h2 class="section-title">Everything you need</h2>
+    <p class="section-sub">Built for individuals and teams who care about reliability.</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>End-to-End Encryption</h3>
+        <p>Your files are encrypted before they leave your device. Nobody — not even us — can read your data.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Instant Sync</h3>
+        <p>Changes appear across all your devices within seconds. Works on desktop, mobile, and the web.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🤝</div>
+        <h3>Team Collaboration</h3>
+        <p>Share folders, set permissions, and collaborate in real-time with your whole team.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📜</div>
+        <h3>Version History</h3>
+        <p>Accidentally deleted something? Restore any file to any previous version up to 180 days back.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔌</div>
+        <h3>Integrations</h3>
+        <p>Connect with Slack, Notion, GitHub, and 50+ other tools you already use every day.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h3>Offline Access</h3>
+        <p>Mark files for offline use and keep working even without an internet connection.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───── PRICING ───── -->
+  <section class="pricing" id="pricing">
+    <h2 class="section-title">Simple Pricing</h2>
+    <p class="section-sub">No hidden fees. Cancel any time.</p>
+    <div class="pricing-grid">
+      <div class="plan">
+        <h3>Free</h3>
+        <div class="price">$0<span>/mo</span></div>
+        <ul>
+          <li>5 GB storage</li>
+          <li>2 devices</li>
+          <li>Basic sharing</li>
+          <li>7-day version history</li>
+        </ul>
+        <button class="plan-btn" data-plan="free">Get Started</button>
+      </div>
+      <div class="plan popular">
+        <div><span class="plan-badge">Most Popular</span></div>
+        <h3>Pro</h3>
+        <div class="price">$9<span>/mo</span></div>
+        <ul>
+          <li>2 TB storage</li>
+          <li>Unlimited devices</li>
+          <li>Advanced sharing</li>
+          <li>180-day version history</li>
+          <li>Priority support</li>
+        </ul>
+        <button class="plan-btn" data-plan="pro" id="plan-pro-btn">Upgrade to Pro</button>
+      </div>
+      <div class="plan">
+        <h3>Business</h3>
+        <div class="price">$25<span>/mo</span></div>
+        <ul>
+          <li>10 TB storage</li>
+          <li>Team management</li>
+          <li>Admin dashboard</li>
+          <li>SSO &amp; compliance</li>
+          <li>Dedicated support</li>
+        </ul>
+        <button class="plan-btn" data-plan="business">Contact Sales</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───── SIGNUP CTA ───── -->
+  <section class="cta-section" id="signup">
+    <h2>Start your free account</h2>
+    <p>No credit card required. 5 GB free forever.</p>
+    <form class="signup-form" id="signup-form">
+      <input type="email" id="email-input" placeholder="you@example.com" required />
+      <button type="submit" id="signup-submit-btn">Create Account</button>
+    </form>
+  </section>
+
+  <!-- ───── FOOTER ───── -->
+  <footer>
+    <p>© 2024 CloudSync Inc. · <a href="#">Privacy</a> · <a href="#">Terms</a></p>
+    <p style="margin-top:.5rem; font-size:.75rem; opacity:.6;">
+      AutoAB Demo — Version A (Control) · group=control
+    </p>
+  </footer>
+
+  <!-- ───── AUTOAB DEBUG BADGE ───── -->
+  <div class="ab-badge">
+    AutoAB · <strong>Version A</strong> · group=control
+  </div>
+
+  <!-- ───────────────────────────────────────────
+       AUTOAB TRACKING SDK
+       Replace EXPERIMENT_ID with the real UUID
+       after you create the experiment via the API
+  ─────────────────────────────────────────── -->
+  <script
+    src="http://localhost:8000/sdk.js"
+    data-experiment-id="REPLACE_WITH_EXPERIMENT_ID"
+    data-group="control"
+    data-api-base="http://localhost:8000"
+  ></script>
+
+  <!-- ───────────────────────────────────────────
+       EXTRA CONVERSION HOOKS
+       These call window.autoab.convert() on key
+       business actions so AutoAB records revenue/
+       conversion events beyond automatic tracking.
+  ─────────────────────────────────────────── -->
+  <script>
+    // Wait until SDK is ready (it sets window.autoab)
+    function onSdkReady(cb) {
+      if (window.autoab) { cb(); return; }
+      const t = setInterval(() => { if (window.autoab) { clearInterval(t); cb(); } }, 100);
+    }
+
+    onSdkReady(() => {
+      // Hero CTA → conversion (value = 0 = free plan)
+      document.getElementById('hero-cta-btn').addEventListener('click', () => {
+        window.autoab.convert(0);
+      });
+
+      // Nav sign-up button → conversion
+      document.getElementById('nav-signup-btn').addEventListener('click', () => {
+        window.autoab.convert(0);
+      });
+
+      // Pro plan button → high-value conversion
+      document.getElementById('plan-pro-btn').addEventListener('click', () => {
+        window.autoab.convert(9); // $9/mo revenue
+      });
+
+      // Plan buttons (all)
+      document.querySelectorAll('.plan-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const plan = btn.dataset.plan;
+          const value = plan === 'pro' ? 9 : plan === 'business' ? 25 : 0;
+          window.autoab.track('plan_click', { plan, value });
+        });
+      });
+
+      // Signup form submit → conversion
+      document.getElementById('signup-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email-input').value;
+        window.autoab.convert(0);
+        window.autoab.track('form_submit', { form: 'signup', email_domain: email.split('@')[1] });
+        alert('🎉 Account created! (Demo — no real signup)');
+      });
+    });
+  </script>
+
+</body>
+</html>

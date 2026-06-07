@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CloudSync — Don't Lose Another File (Version B)</title>
+  <style>
+    /* ───────────────────────────────────────────
+       RESET & BASE
+    ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:    #dc2626;   /* red — treatment colour */
+      --primary-h:  #b91c1c;
+      --accent:     #f97316;
+      --bg:         #fff7f7;
+      --card-bg:    #ffffff;
+      --text-dark:  #0f172a;
+      --text-mid:   #475569;
+      --text-light: #94a3b8;
+      --border:     #fee2e2;
+      --radius:     12px;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text-dark);
+      line-height: 1.6;
+    }
+
+    /* ───────────────────────────────────────────
+       URGENCY BANNER
+    ─────────────────────────────────────────── */
+    .urgency-banner {
+      background: var(--primary);
+      color: #fff;
+      text-align: center;
+      padding: .6rem 1rem;
+      font-size: .85rem; font-weight: 600;
+    }
+    .urgency-banner span { text-decoration: underline; cursor: pointer; }
+
+    /* ───────────────────────────────────────────
+       NAV
+    ─────────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 5%;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .logo { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a { text-decoration: none; color: var(--text-mid); font-size: .9rem; }
+    .nav-links a:hover { color: var(--primary); }
+    .nav-cta {
+      background: var(--primary); color: #fff;
+      border: none; border-radius: 8px;
+      padding: .5rem 1.2rem; font-size: .9rem; font-weight: 600;
+      cursor: pointer; transition: background .2s;
+    }
+    .nav-cta:hover { background: var(--primary-h); }
+
+    /* ───────────────────────────────────────────
+       HERO
+    ─────────────────────────────────────────── */
+    .hero {
+      max-width: 900px; margin: 0 auto;
+      padding: 100px 5% 70px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: #fef2f2; color: var(--primary);
+      border: 1px solid #fecaca;
+      border-radius: 100px; padding: .3rem 1rem;
+      font-size: .8rem; font-weight: 600; letter-spacing: .05em;
+      text-transform: uppercase; margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 800; line-height: 1.15;
+      color: var(--text-dark);
+      margin-bottom: 1.2rem;
+    }
+    .hero h1 span { color: var(--primary); }
+    .hero p {
+      font-size: 1.15rem; color: var(--text-mid);
+      max-width: 580px; margin: 0 auto 2.5rem;
+    }
+
+    /* Urgency subtext below CTA */
+    .urgency-text {
+      margin-top: .8rem;
+      font-size: .85rem; color: var(--primary);
+      font-weight: 600;
+    }
+
+    .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--primary); color: #fff;
+      border: none; border-radius: var(--radius);
+      padding: .9rem 2.2rem; font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: background .2s, transform .1s, box-shadow .2s;
+      text-decoration: none; display: inline-block;
+      box-shadow: 0 4px 14px rgba(220,38,38,.35);
+    }
+    .btn-primary:hover {
+      background: var(--primary-h);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(220,38,38,.45);
+    }
+    .btn-secondary {
+      background: transparent; color: var(--text-mid);
+      border: 2px solid var(--border); border-radius: var(--radius);
+      padding: .9rem 2.2rem; font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: background .2s, border-color .2s;
+      text-decoration: none; display: inline-block;
+    }
+    .btn-secondary:hover { background: #fef2f2; border-color: #fecaca; }
+
+    /* ───────────────────────────────────────────
+       SOCIAL PROOF LOGOS  ← NEW in Version B
+    ─────────────────────────────────────────── */
+    .social-proof {
+      padding: 2rem 5% 2.5rem;
+      text-align: center;
+    }
+    .social-proof p {
+      color: var(--text-light); font-size: .8rem;
+      text-transform: uppercase; letter-spacing: .1em;
+      margin-bottom: 1.2rem;
+    }
+    .logo-row {
+      display: flex; justify-content: center; align-items: center;
+      flex-wrap: wrap; gap: 2.5rem;
+    }
+    .fake-logo {
+      font-size: .95rem; font-weight: 700;
+      color: #cbd5e1; letter-spacing: -.02em;
+      user-select: none;
+    }
+
+    /* ───────────────────────────────────────────
+       STATS BAR
+    ─────────────────────────────────────────── */
+    .stats-bar {
+      background: var(--primary);
+      padding: 1.8rem 5%;
+      display: flex; justify-content: center;
+      flex-wrap: wrap; gap: 3rem;
+    }
+    .stat-item { text-align: center; color: #fff; }
+    .stat-item .num { font-size: 2rem; font-weight: 800; }
+    .stat-item .lbl { font-size: .85rem; opacity: .85; }
+
+    /* ───────────────────────────────────────────
+       FEATURES
+    ─────────────────────────────────────────── */
+    .features {
+      max-width: 1100px; margin: 80px auto;
+      padding: 0 5%;
+    }
+    .section-title {
+      text-align: center; font-size: 2rem; font-weight: 700;
+      margin-bottom: .5rem;
+    }
+    .section-sub {
+      text-align: center; color: var(--text-mid);
+      margin-bottom: 3rem; font-size: 1rem;
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+    .feature-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 2rem;
+      transition: box-shadow .2s, border-color .2s;
+    }
+    .feature-card:hover {
+      box-shadow: 0 8px 30px rgba(220,38,38,.1);
+      border-color: #fca5a5;
+    }
+    .feature-icon { font-size: 2.2rem; margin-bottom: 1rem; }
+    .feature-card h3 { font-size: 1.1rem; margin-bottom: .5rem; }
+    .feature-card p { color: var(--text-mid); font-size: .9rem; }
+
+    /* ───────────────────────────────────────────
+       TESTIMONIALS  ← NEW in Version B
+    ─────────────────────────────────────────── */
+    .testimonials {
+      background: var(--card-bg);
+      padding: 70px 5%;
+    }
+    .testimonial-grid {
+      max-width: 1000px; margin: 2rem auto 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+    .testimonial {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.5rem;
+    }
+    .testimonial .stars { color: #f59e0b; font-size: 1rem; margin-bottom: .6rem; }
+    .testimonial p { color: var(--text-mid); font-size: .9rem; font-style: italic; margin-bottom: 1rem; }
+    .testimonial .author { font-size: .85rem; font-weight: 600; }
+    .testimonial .role { font-size: .8rem; color: var(--text-light); }
+
+    /* ───────────────────────────────────────────
+       PRICING
+    ─────────────────────────────────────────── */
+    .pricing {
+      padding: 80px 5%;
+    }
+    .pricing-grid {
+      max-width: 900px; margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem; margin-top: 2rem;
+    }
+    .plan {
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 2rem; text-align: center;
+      background: var(--card-bg);
+    }
+    .plan.popular { border-color: var(--primary); }
+    .plan-badge {
+      background: var(--primary); color: #fff;
+      border-radius: 100px; padding: .2rem .8rem;
+      font-size: .75rem; font-weight: 600;
+    }
+    .plan h3 { font-size: 1.2rem; margin: .8rem 0 .3rem; }
+    .plan .price { font-size: 2.5rem; font-weight: 800; color: var(--primary); }
+    .plan .price span { font-size: 1rem; font-weight: 400; color: var(--text-mid); }
+    .plan ul { list-style: none; margin: 1.2rem 0; text-align: left; }
+    .plan ul li { padding: .35rem 0; color: var(--text-mid); font-size: .9rem; }
+    .plan ul li::before { content: "✓ "; color: var(--primary); font-weight: 700; }
+    .plan-btn {
+      width: 100%; background: var(--primary); color: #fff;
+      border: none; border-radius: 8px;
+      padding: .75rem; font-size: .95rem; font-weight: 600;
+      cursor: pointer; transition: background .2s;
+    }
+    .plan-btn:hover { background: var(--primary-h); }
+
+    /* ───────────────────────────────────────────
+       FORM / CTA SECTION
+    ─────────────────────────────────────────── */
+    .cta-section {
+      max-width: 620px; margin: 80px auto;
+      padding: 0 5%; text-align: center;
+    }
+    .cta-section h2 { font-size: 2rem; font-weight: 700; margin-bottom: .5rem; }
+    .cta-section p { color: var(--text-mid); margin-bottom: 1.5rem; }
+
+    /* Countdown timer  ← NEW in Version B */
+    .countdown {
+      background: #fef2f2; border: 1px solid #fecaca;
+      border-radius: 8px; padding: .8rem 1.2rem;
+      margin-bottom: 1.5rem;
+      font-size: .9rem; color: var(--primary); font-weight: 600;
+    }
+    .countdown span { font-variant-numeric: tabular-nums; }
+
+    .signup-form {
+      display: flex; gap: .8rem; flex-wrap: wrap; justify-content: center;
+    }
+    .signup-form input {
+      flex: 1; min-width: 220px;
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: .8rem 1rem; font-size: .95rem; outline: none;
+    }
+    .signup-form input:focus { border-color: var(--primary); }
+    .signup-form button {
+      background: var(--primary); color: #fff;
+      border: none; border-radius: 8px;
+      padding: .8rem 1.5rem; font-size: .95rem; font-weight: 600;
+      cursor: pointer; white-space: nowrap;
+    }
+    .signup-form button:hover { background: var(--primary-h); }
+    .form-note { margin-top: .6rem; font-size: .8rem; color: var(--text-light); }
+
+    /* ───────────────────────────────────────────
+       FOOTER
+    ─────────────────────────────────────────── */
+    footer {
+      background: var(--text-dark); color: var(--text-light);
+      text-align: center; padding: 2.5rem 5%;
+      font-size: .85rem;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    /* ───────────────────────────────────────────
+       AUTOAB DEBUG BADGE (dev only)
+    ─────────────────────────────────────────── */
+    .ab-badge {
+      position: fixed; bottom: 16px; right: 16px;
+      background: #1e293b; color: #94a3b8;
+      border-radius: 8px; padding: .5rem .9rem;
+      font-size: .75rem; font-family: monospace;
+      z-index: 9999; pointer-events: none;
+    }
+    .ab-badge strong { color: #f87171; }
+  </style>
+</head>
+<body>
+
+  <!-- ───── URGENCY BANNER (NEW in B) ───── -->
+  <div class="urgency-banner" id="urgency-banner">
+    🔥 Limited offer: <strong>50% off Pro</strong> for the next <span id="banner-timer">10:00</span> — <span onclick="document.getElementById('plan-pro-btn').scrollIntoView({behavior:'smooth'})">Claim now →</span>
+  </div>
+
+  <!-- ───── NAV ───── -->
+  <nav>
+    <span class="logo">☁ CloudSync</span>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#signup">Get Started</a></li>
+    </ul>
+    <button class="nav-cta" id="nav-signup-btn">⚡ Try Free Now</button>
+  </nav>
+
+  <!-- ───── HERO ───── -->
+  <section class="hero">
+    <div class="hero-badge">⚠️ Stop Losing Files Today</div>
+    <h1>Your Files Are One<br /><span>Crash Away From Gone</span></h1>
+    <p>CloudSync automatically backs up everything — in real time. Join 500,000+ users who never worry about losing files again.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" id="hero-cta-btn">🚀 Protect My Files Now</button>
+      <a href="#features" class="btn-secondary">See How It Works</a>
+    </div>
+    <p class="urgency-text">⏰ Offer expires in <span id="hero-timer">10:00</span> — 50% off Pro</p>
+  </section>
+
+  <!-- ───── SOCIAL PROOF LOGOS (NEW in B) ───── -->
+  <div class="social-proof">
+    <p>Trusted by teams at</p>
+    <div class="logo-row">
+      <span class="fake-logo">Acme Corp</span>
+      <span class="fake-logo">NovaTech</span>
+      <span class="fake-logo">Bright Labs</span>
+      <span class="fake-logo">PeakWorks</span>
+      <span class="fake-logo">Skyline Inc</span>
+    </div>
+  </div>
+
+  <!-- ───── STATS BAR ───── -->
+  <div class="stats-bar">
+    <div class="stat-item"><div class="num">500K+</div><div class="lbl">Protected Users</div></div>
+    <div class="stat-item"><div class="num">99.9%</div><div class="lbl">Uptime</div></div>
+    <div class="stat-item"><div class="num">2PB</div><div class="lbl">Data Secured</div></div>
+    <div class="stat-item"><div class="num">4.9★</div><div class="lbl">User Rating</div></div>
+  </div>
+
+  <!-- ───── FEATURES ───── -->
+  <section class="features" id="features">
+    <h2 class="section-title">Why people switch to CloudSync</h2>
+    <p class="section-sub">Hard drives fail. Laptops get stolen. Disasters happen. We've got you covered.</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>Military-Grade Encryption</h3>
+        <p>AES-256 encryption before files ever leave your device. Zero-knowledge architecture — only YOU hold the keys.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Real-Time Backup</h3>
+        <p>Files sync the moment you save. Never lose more than a second of work — even if your laptop dies right now.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🤝</div>
+        <h3>Instant Team Sharing</h3>
+        <p>Share a folder in 2 clicks. Set granular permissions. Your whole team is always on the latest version.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📜</div>
+        <h3>365-Day History</h3>
+        <p>Recover any file from any point in the past year. Ransomware attack? We'll restore everything in minutes.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔌</div>
+        <h3>50+ Integrations</h3>
+        <p>Works with Slack, Notion, GitHub, Figma, and every tool your team relies on — set up in seconds.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h3>Works Offline, Always</h3>
+        <p>No Wi-Fi? No problem. Mark files for offline access and keep working. Syncs automatically when you're back.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───── TESTIMONIALS (NEW in B) ───── -->
+  <section class="testimonials" id="testimonials">
+    <h2 class="section-title">What our users say</h2>
+    <p class="section-sub">Real reviews from real people (simulated for this A/B demo).</p>
+    <div class="testimonial-grid">
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <p>"My laptop died and I lost nothing. Absolutely nothing. CloudSync saved months of work."</p>
+        <div class="author">Sarah K.</div>
+        <div class="role">Freelance Designer</div>
+      </div>
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <p>"We switched our entire 40-person team. Setup took one afternoon. ROI was immediate."</p>
+        <div class="author">James T.</div>
+        <div class="role">CTO, NovaTech</div>
+      </div>
+      <div class="testimonial">
+        <div class="stars">★★★★☆</div>
+        <p>"Finally a cloud service that doesn't feel like it was designed by engineers for engineers. Love the UX."</p>
+        <div class="author">Priya M.</div>
+        <div class="role">Product Manager</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───── PRICING ───── -->
+  <section class="pricing" id="pricing">
+    <h2 class="section-title">Don't wait until it's too late</h2>
+    <p class="section-sub">One lost project costs more than a year of Pro. Get protected today.</p>
+    <div class="pricing-grid">
+      <div class="plan">
+        <h3>Free</h3>
+        <div class="price">$0<span>/mo</span></div>
+        <ul>
+          <li>5 GB storage</li>
+          <li>2 devices</li>
+          <li>Basic sharing</li>
+          <li>7-day version history</li>
+        </ul>
+        <button class="plan-btn" data-plan="free">Start Free</button>
+      </div>
+      <div class="plan popular">
+        <div><span class="plan-badge">🔥 50% OFF Today</span></div>
+        <h3>Pro</h3>
+        <div class="price">$9<span>/mo</span></div>
+        <ul>
+          <li>2 TB storage</li>
+          <li>Unlimited devices</li>
+          <li>Advanced sharing</li>
+          <li>365-day version history</li>
+          <li>Priority support</li>
+        </ul>
+        <button class="plan-btn" data-plan="pro" id="plan-pro-btn">🚀 Get Pro — 50% Off</button>
+      </div>
+      <div class="plan">
+        <h3>Business</h3>
+        <div class="price">$25<span>/mo</span></div>
+        <ul>
+          <li>10 TB storage</li>
+          <li>Team management</li>
+          <li>Admin dashboard</li>
+          <li>SSO &amp; compliance</li>
+          <li>Dedicated support</li>
+        </ul>
+        <button class="plan-btn" data-plan="business">Talk to Sales</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───── SIGNUP CTA ───── -->
+  <section class="cta-section" id="signup">
+    <h2>⚡ Protect your files right now</h2>
+    <p>Takes 30 seconds. No credit card. You'll wonder why you waited.</p>
+    <div class="countdown">
+      ⏰ This offer expires in <span id="cta-timer">10:00</span>
+    </div>
+    <form class="signup-form" id="signup-form">
+      <input type="email" id="email-input" placeholder="you@example.com" required />
+      <button type="submit" id="signup-submit-btn">🔒 Protect My Files</button>
+    </form>
+    <p class="form-note">✓ No credit card &nbsp;·&nbsp; ✓ Cancel any time &nbsp;·&nbsp; ✓ 30-second setup</p>
+  </section>
+
+  <!-- ───── FOOTER ───── -->
+  <footer>
+    <p>© 2024 CloudSync Inc. · <a href="#">Privacy</a> · <a href="#">Terms</a></p>
+    <p style="margin-top:.5rem; font-size:.75rem; opacity:.6;">
+      AutoAB Demo — Version B (Treatment) · group=treatment
+    </p>
+  </footer>
+
+  <!-- ───── AUTOAB DEBUG BADGE ───── -->
+  <div class="ab-badge">
+    AutoAB · <strong>Version B</strong> · group=treatment
+  </div>
+
+  <!-- ───────────────────────────────────────────
+       AUTOAB TRACKING SDK
+       Replace EXPERIMENT_ID with the real UUID
+       after you create the experiment via the API
+  ─────────────────────────────────────────── -->
+  <script
+    src="http://localhost:8000/sdk.js"
+    data-experiment-id="REPLACE_WITH_EXPERIMENT_ID"
+    data-group="treatment"
+    data-api-base="http://localhost:8000"
+  ></script>
+
+  <!-- ───────────────────────────────────────────
+       COUNTDOWN TIMERS  (cosmetic urgency — shared state)
+  ─────────────────────────────────────────── -->
+  <script>
+    function startCountdown(durationSec) {
+      const ids = ['banner-timer', 'hero-timer', 'cta-timer'];
+      let remaining = durationSec;
+      function tick() {
+        const m = String(Math.floor(remaining / 60)).padStart(2, '0');
+        const s = String(remaining % 60).padStart(2, '0');
+        ids.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = `${m}:${s}`;
+        });
+        if (remaining <= 0) return;
+        remaining--;
+        setTimeout(tick, 1000);
+      }
+      tick();
+    }
+    startCountdown(600); // 10 minutes
+  </script>
+
+  <!-- ───────────────────────────────────────────
+       EXTRA CONVERSION HOOKS
+  ─────────────────────────────────────────── -->
+  <script>
+    function onSdkReady(cb) {
+      if (window.autoab) { cb(); return; }
+      const t = setInterval(() => { if (window.autoab) { clearInterval(t); cb(); } }, 100);
+    }
+
+    onSdkReady(() => {
+      // Hero CTA
+      document.getElementById('hero-cta-btn').addEventListener('click', () => {
+        window.autoab.convert(0);
+      });
+
+      // Nav CTA
+      document.getElementById('nav-signup-btn').addEventListener('click', () => {
+        window.autoab.convert(0);
+      });
+
+      // Pro plan (high-value)
+      document.getElementById('plan-pro-btn').addEventListener('click', () => {
+        window.autoab.convert(9);
+      });
+
+      // All plan buttons
+      document.querySelectorAll('.plan-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const plan = btn.dataset.plan;
+          const value = plan === 'pro' ? 9 : plan === 'business' ? 25 : 0;
+          window.autoab.track('plan_click', { plan, value });
+        });
+      });
+
+      // Urgency banner click
+      document.getElementById('urgency-banner').addEventListener('click', () => {
+        window.autoab.track('urgency_banner_click', {});
+      });
+
+      // Signup form
+      document.getElementById('signup-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email-input').value;
+        window.autoab.convert(0);
+        window.autoab.track('form_submit', { form: 'signup', email_domain: email.split('@')[1] });
+        alert('🎉 Files protected! (Demo — no real signup)');
+      });
+    });
+  </script>
+
+</body>
+</html>

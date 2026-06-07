@@ -1,0 +1,98 @@
+version: '3.9'
+
+services:
+
+  # ── PostgreSQL + TimescaleDB ─────────────────────────────────
+  db:
+    image: timescale/timescaledb:latest-pg15
+    container_name: autoab_db
+    environment:
+      POSTGRES_USER: autoab
+      POSTGRES_PASSWORD: autoab_secret
+      POSTGRES_DB: autoab_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U autoab"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis (Message Broker + Celery Backend) ──────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: autoab_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── FastAPI Backend ──────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: autoab_backend
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://autoab:autoab_secret@db:5432/autoab_db
+      SYNC_DATABASE_URL: postgresql://autoab:autoab_secret@db:5432/autoab_db
+      REDIS_URL: redis://redis:6379/0
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+
+  # ── Celery Worker (background task processor) ────────────────
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: autoab_worker
+    command: celery -A workers.metric_tasks worker --loglevel=info --concurrency=2
+    environment:
+      DATABASE_URL: postgresql+asyncpg://autoab:autoab_secret@db:5432/autoab_db
+      SYNC_DATABASE_URL: postgresql://autoab:autoab_secret@db:5432/autoab_db
+      REDIS_URL: redis://redis:6379/0
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+
+  # ── Celery Beat (task scheduler — runs tasks on a schedule) ──
+  beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: autoab_beat
+    command: celery -A workers.metric_tasks beat --loglevel=info
+    environment:
+      DATABASE_URL: postgresql+asyncpg://autoab:autoab_secret@db:5432/autoab_db
+      SYNC_DATABASE_URL: postgresql://autoab:autoab_secret@db:5432/autoab_db
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+
+volumes:
+  pgdata:
